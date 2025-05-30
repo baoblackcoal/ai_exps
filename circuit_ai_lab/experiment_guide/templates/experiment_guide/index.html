@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Circuit Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-slate-100 font-sans">
+    <div class="container mx-auto p-4">
+        <header class="mb-6">
+            <h1 class="text-3xl font-bold text-center text-slate-700">AI Guided Circuit Lab: Half-Adder</h1>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: AI Agent Chat -->
+            <div class="lg:col-span-1 bg-white p-5 rounded-xl shadow-lg flex flex-col" style="height: calc(100vh - 120px);">
+                <h2 class="text-2xl font-semibold mb-4 text-slate-700 border-b pb-2">AI Agent Chat</h2>
+                <div id="chatMessagesContainer" class="chat-messages flex-grow overflow-y-auto mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200" x-ref="chatMessages">
+                    <!-- Example Static Messages (will be part of HTMX swap or Alpine init) -->
+                    <div class="message ai p-3 my-2 rounded-lg bg-sky-100 text-sky-700 max-w-[85%] self-start shadow text-sm">
+                        <strong class="font-semibold block mb-1">AI Agent:</strong>
+                        Hello! How can I help you with your circuit design today?
+                    </div>
+                    <div class="flex justify-end my-2">
+                         <div class="message user p-3 rounded-lg bg-green-100 text-green-700 max-w-[85%] self-end shadow text-sm text-left">
+                            <strong class="font-semibold block mb-1">You:</strong>
+                            I need to build a NOT gate.
+                        </div>
+                    </div>
+                    <!-- Dynamic messages will be rendered here by Alpine.js (user) and HTMX (AI) -->
+                    <template x-for="message in messages" :key="message.id">
+                        <div class="flex justify-end my-2"> 
+                            <div class="message user p-3 rounded-lg bg-green-100 text-green-700 max-w-[85%] self-end shadow text-sm text-left inline-block">
+                                <strong class="font-semibold block mb-1">You:</strong>
+                                <p class="text-sm" x-text="message.text"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="chat-input mt-auto">
+                    <div class="flex">
+                        <input type="text" class="flex-grow border border-slate-300 rounded-l-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                               placeholder="Type your message..." x-model="userInput" @keydown.enter="sendMessage()">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-5 rounded-r-md transition duration-150" @click="sendMessage()">Send</button>
+                    </div>
+                    <form id="chatForm" hx-post="{% url 'send_message' %}" hx-target="#chatMessagesContainer" hx-swap="beforeend" hx-on--after-request="this.reset(); document.getElementById('chatMessagesContainer').dispatchEvent(new CustomEvent('htmxMessageSent'))" class="mt-1">
+                        <input type="hidden" name="message" x-bind:value="userInputForBackend">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> 
+                        <button type="submit" id="htmxSendButton" class="hidden">Send to Backend</button> 
+                    </form>
+                </div>
+            </div>
+
+            <!-- Middle Column: CircuitJS Embed -->
+            <div class="lg:col-span-1 bg-white p-5 rounded-xl shadow-lg flex flex-col" style="height: calc(100vh - 120px);">
+                <h2 class="text-2xl font-semibold mb-4 text-slate-700 border-b pb-2">CircuitJS Simulator</h2>
+                <div class="flex-grow rounded-lg overflow-hidden border border-slate-200">
+                    <iframe class="w-full h-full border-0" src="https://www.falstad.com/circuit/circuitjs.html"></iframe>
+                </div>
+            </div>
+
+            <!-- Right Column: Experiment Assistant Panel -->
+            <div class="lg:col-span-1 bg-white p-5 rounded-xl shadow-lg flex flex-col" style="height: calc(100vh - 120px);">
+                <h2 class="text-2xl font-semibold mb-4 text-slate-700 border-b pb-2">Experiment Assistant</h2>
+                <div class="overflow-y-auto space-y-5 pr-2">
+                    <!-- Experiment Steps Section -->
+                    <div class="border border-slate-200 rounded-lg p-4 shadow-sm bg-slate-50">
+                        <h3 class="text-lg font-semibold mb-3 text-slate-600">Experiment Steps</h3>
+                        <div class="space-y-2">
+                            <template x-for="step in steps" :key="step.id">
+                                <div @click="setCurrentStep(step.id)"
+                                     class="p-3 rounded-md cursor-pointer transition-colors text-sm"
+                                     :class="step.active ? 'bg-blue-500 text-white font-semibold shadow-md' : 'bg-white hover:bg-blue-50 text-slate-700 border border-slate-300'">
+                                    <span x-text="step.active ? '➡️ ' + step.title : step.title"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Schematic Reference Section -->
+                    <div class="border border-slate-200 rounded-lg p-4 shadow-sm bg-slate-50">
+                        <h3 class="text-lg font-semibold mb-3 text-slate-600">Schematic Reference</h3>
+                        <div class="flex justify-center items-center p-2 bg-white rounded border border-slate-200">
+                            <img src="https://via.placeholder.com/300x200.png?text=Half-Adder+Schematic" alt="Schematic Reference" class="max-w-full h-auto rounded-md">
+                        </div>
+                    </div>
+
+                    <!-- Real-time Truth Table Section -->
+                    <div class="border border-slate-200 rounded-lg p-4 shadow-sm bg-slate-50">
+                        <h3 class="text-lg font-semibold mb-3 text-slate-600">Real-time Truth Table</h3>
+                        <div class="overflow-x-auto bg-white rounded border border-slate-200">
+                            <table class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-300">
+                                    <tr>
+                                        <th scope="col" class="px-5 py-3 text-center">A</th>
+                                        <th scope="col" class="px-5 py-3 text-center">B</th>
+                                        <th scope="col" class="px-5 py-3 text-center">S (Sum)</th>
+                                        <th scope="col" class="px-5 py-3 text-center">C_out (Carry)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(row, index) in truthTable" :key="index">
+                                        <tr class="border-b border-slate-200 last:border-b-0 hover:bg-slate-50 transition-colors">
+                                            <td class="px-5 py-3 text-center" x-text="row.a"></td>
+                                            <td class="px-5 py-3 text-center" x-text="row.b"></td>
+                                            <td class="px-5 py-3 text-center font-mono text-blue-600 font-semibold" x-text="row.s"></td>
+                                            <td class="px-5 py-3 text-center font-mono text-blue-600 font-semibold" x-text="row.c_out"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Log Experiment Results Section -->
+                    <div class="border border-slate-200 rounded-lg p-4 shadow-sm bg-slate-50">
+                        <h3 class="text-lg font-semibold mb-3 text-slate-600">Log Experiment Results</h3>
+                        <div class="p-3 border border-slate-200 rounded-md bg-white min-h-[60px]">
+                            <p class="text-slate-600 text-sm" x-text="loggingInstruction"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    function chatComponent() {
+        return {
+            userInput: '',
+            userInputForBackend: '',
+            messageIdCounter: 0, // Used for unique keys for user messages added by Alpine
+            messages: [], // Only for user messages added client-side before HTMX response
+            
+            scrollToBottom() {
+                this.$nextTick(() => {
+                    const chatArea = this.$refs.chatMessages;
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                });
+            },
+
+            sendMessage() {
+                const messageText = this.userInput.trim();
+                if (messageText === '') return;
+
+                // Add user message to UI immediately (Alpine)
+                this.messages.push({ id: this.messageIdCounter++, text: messageText, sender: 'user' });
+                this.userInputForBackend = messageText; // Set value for HTMX form
+                this.userInput = ''; // Clear input field
+
+                this.scrollToBottom(); // Scroll after adding user message
+
+                // Trigger HTMX form submission
+                this.$nextTick(() => {
+                    document.getElementById('htmxSendButton').click();
+                    // HTMX will handle the AI response and append it.
+                    // We'll also need to scroll after HTMX appends its content.
+                    // A more robust way might be to listen to an HTMX event if possible,
+                    // or just scroll again after a short delay if needed.
+                    // For now, we rely on the user scrolling or a subsequent message to scroll.
+                    // Or, we can add a listener for htmx:afterSwap event on the chat container.
+                });
+            },
+            init() {
+                const chatContainer = document.getElementById('chatMessagesContainer');
+                if (chatContainer) {
+                    // Listen for custom event dispatched after HTMX swap to ensure scroll
+                    chatContainer.addEventListener('htmxMessageSent', () => {
+                        this.scrollToBottom();
+                    });
+                     // Initial scroll to bottom if there's existing content from server
+                    this.scrollToBottom();
+                }
+            }
+        }
+    }
+
+    function assistantPanelComponent() {
+        return {
+            steps: [ // IDs must match EXPERIMENT_STEPS in views.py
+                { id: 1, title: 'Experiment Preparation', active: false }, // Default active state handled by init
+                { id: 2, title: 'Add Input Components', active: false },
+                { id: 3, title: 'Add Logic Gates', active: false },
+                { id: 4, title: 'Connect Components', active: false },
+                { id: 5, title: 'Simulate and Verify', active: false },
+                { id: 6, title: 'Summarize Results', active: false }
+            ],
+            currentStepId: {{ initial_step_id | default:1 }},
+            setCurrentStep(stepId) {
+                // Ensure stepId is valid, find the step
+                const targetStep = this.steps.find(s => s.id === stepId);
+                if (!targetStep) {
+                    console.warn('setCurrentStep: Invalid stepId', stepId);
+                    // Attempt to find by currentStepName if ID is 0 (initial)
+                    // This part might need refinement based on how 'initial' step is handled
+                    if (stepId === 0 && this.steps.length > 0) {
+                         this.currentStepId = this.steps[0].id; // Default to first actual step
+                         this.steps = this.steps.map(s => ({ ...s, active: s.id === this.currentStepId }));
+                         return;
+                    } else if (this.steps.length > 0) { // Fallback to first step if ID is truly unknown
+                        this.currentStepId = this.steps[0].id;
+                        this.steps = this.steps.map(s => ({ ...s, active: s.id === this.currentStepId }));
+                        return;
+                    }
+                    return; // If no steps defined, do nothing
+                }
+
+                this.currentStepId = stepId;
+                this.steps = this.steps.map(step => ({ ...step, active: step.id === stepId }));
+            },
+            truthTable: [
+                { a: 0, b: 0, s: '?', c_out: '?' },
+                { a: 0, b: 1, s: '?', c_out: '?' },
+                { a: 1, b: 0, s: '?', c_out: '?' },
+                { a: 1, b: 1, s: '?', c_out: '?' }
+            ],
+            updateTruthTableRow(rowIndex, s_val, c_out_val) {
+                if (this.truthTable[rowIndex] !== undefined) {
+                    this.truthTable[rowIndex].s = (s_val === null || s_val === undefined) ? '?' : s_val;
+                    this.truthTable[rowIndex].c_out = (c_out_val === null || c_out_val === undefined) ? '?' : c_out_val;
+                } else {
+                    console.warn('updateTruthTableRow: Invalid rowIndex', rowIndex);
+                }
+            },
+            loggingInstruction: '{{ initial_logging_instruction | escapejs | default:"AI will provide instructions for the current step." }}',
+            init() {
+                this.setCurrentStep(this.currentStepId); // Set initial active step based on server context
+
+                document.body.addEventListener('updateAssistantPanel', (event) => {
+                    const detail = event.detail;
+                    console.log('updateAssistantPanel event received:', detail);
+                    if (detail.nextStepId !== undefined && detail.nextStepId !== null) {
+                        this.setCurrentStep(detail.nextStepId);
+                    }
+                    if (detail.loggingInstruction) {
+                        this.loggingInstruction = detail.loggingInstruction;
+                    }
+                    if (detail.truthTableUpdate) {
+                        this.updateTruthTableRow(
+                            detail.truthTableUpdate.rowIndex,
+                            detail.truthTableUpdate.s,
+                            detail.truthTableUpdate.c_out
+                        );
+                    }
+                });
+            }
+        }
+    }
+</script>
+</html>
