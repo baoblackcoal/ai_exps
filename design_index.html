@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent 半加器仿真实验 - 原型设计</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .design-container {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .design-svg {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        
+        .feature-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+        }
+        
+        .tech-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .interaction-flow {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 0.75rem 0;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: bold;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 页面头部 -->
+    <header class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">AI Agent 半加器仿真实验</h1>
+                    <p class="text-lg text-gray-600 mt-2">用户界面原型设计</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                        设计版本 v1.1
+                    </span>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        2025年5月30日
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 设计概览 -->
+        <div class="highlight-box">
+            <h2 class="text-2xl font-bold mb-4">设计概览</h2>
+            <p class="text-lg leading-relaxed">
+                这是一个专门为引导学生进行半加器数字电路仿真实验而设计的AI Agent界面。
+                采用三栏式布局，集成了智能聊天、电路仿真和实验辅助功能，
+                旨在提供个性化、互动式的学习体验。
+            </p>
+        </div>
+
+        <!-- 设计图展示 -->
+        <section class="mb-12">
+            <h2 class="section-title text-2xl font-bold text-gray-900">界面原型设计</h2>
+            <div class="design-container">
+                <img src="design.svg" alt="AI Agent 半加器仿真实验界面设计" class="design-svg w-full">
+            </div>
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                <p class="text-blue-800 text-sm">
+                    <strong>提示:</strong> 可以通过浏览器缩放功能查看设计细节。设计图展示了完整的三栏式布局和所有关键界面元素。
+                </p>
+            </div>
+        </section>
+
+        <!-- 核心功能模块 -->
+        <section class="mb-12">
+            <h2 class="section-title text-2xl font-bold text-gray-900">核心功能模块</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- AI 聊天助手 -->
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900">AI 实验助手</h3>
+                    </div>
+                    <ul class="space-y-2 text-gray-600">
+                        <li>• 智能对话引导</li>
+                        <li>• 实时问题解答</li>
+                        <li>• 个性化指导建议</li>
+                        <li>• 操作步骤详解</li>
+                        <li>• 故障诊断与排查</li>
+                    </ul>
+                </div>
+
+                <!-- CircuitJS 仿真环境 -->
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900">电路仿真环境</h3>
+                    </div>
+                    <ul class="space-y-2 text-gray-600">
+                        <li>• CircuitJS 在线仿真器</li>
+                        <li>• 可视化电路搭建</li>
+                        <li>• 实时仿真运行</li>
+                        <li>• 逻辑门元器件库</li>
+                        <li>• 交互式操作界面</li>
+                    </ul>
+                </div>
+
+                <!-- 实验助手面板 -->
+                <div class="feature-card bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900">实验助手面板</h3>
+                    </div>
+                    <ul class="space-y-2 text-gray-600">
+                        <li>• 结构化实验步骤</li>
+                        <li>• 原理图参考对照</li>
+                        <li>• 实时真值表显示</li>
+                        <li>• 实验结果记录提示</li>
+                        <li>• 进度跟踪指示</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 交互流程设计 -->
+        <section class="mb-12">
+            <h2 class="section-title text-2xl font-bold text-gray-900">用户交互流程</h2>
+            <div class="interaction-flow">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">典型实验流程</h3>
+                
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">实验准备</h4>
+                        <p class="text-gray-600 text-sm">AI助手问候，介绍实验目标，确认CircuitJS环境</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">添加输入元件</h4>
+                        <p class="text-gray-600 text-sm">在AI指导下添加逻辑输入开关A和B，实验面板高亮当前步骤</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">添加逻辑门</h4>
+                        <p class="text-gray-600 text-sm">按照原理图参考，添加XOR门和AND门到电路中</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">连接电路</h4>
+                        <p class="text-gray-600 text-sm">根据半加器逻辑连接各元器件，AI提供详细连接指导</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">仿真验证</h4>
+                        <p class="text-gray-600 text-sm">测试所有输入组合，实时真值表显示结果，对比理论值</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-number">6</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">总结拓展</h4>
+                        <p class="text-gray-600 text-sm">AI总结实验要点，提出思考问题，引导进一步学习</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI 能力体现 -->
+        <section class="mb-12">
+            <h2 class="section-title text-2xl font-bold text-gray-900">AI Agent 核心能力体现</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">推理与规划能力</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">理解学生意图，分析电路逻辑错误</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">将复杂实验分解为有序步骤</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">根据进度动态调整指导策略</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">执行与工具使用</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">精确指导CircuitJS操作步骤</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">实时跟踪实验进度和状态</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">主动提供操作建议和提示</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">自我纠错与适应</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">识别无效指导，调整解释策略</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">预判常见错误，提前提示</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">基于交互数据优化指导方式</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">多模态交互</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">文字对话与可视化界面结合</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">原理图参考与实时数据展示</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span class="text-gray-600">结构化记录与即时反馈</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 技术栈 -->
+        <section class="mb-12">
+            <h2 class="section-title text-2xl font-bold text-gray-900">技术栈</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">前端技术</h3>
+                        <div class="flex flex-wrap">
+                            <span class="tech-badge">Django Templates</span>
+                            <span class="tech-badge">Tailwind CSS</span>
+                            <span class="tech-badge">HTMX</span>
+                            <span class="tech-badge">Alpine.js</span>
+                            <span class="tech-badge">CircuitJS (iframe)</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">后端技术</h3>
+                        <div class="flex flex-wrap">
+                            <span class="tech-badge">Django</span>
+                            <span class="tech-badge">QWen3 大语言模型</span>
+                            <span class="tech-badge">SQLite</span>
+                            <span class="tech-badge">WebSocket</span>
+                            <span class="tech-badge">REST API</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 设计特色 -->
+        <section class="mb-12">
+            <h2 class="section-title text-2xl font-bold text-gray-900">设计特色与创新点</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-900 mb-3">📋 结构化学习引导</h3>
+                    <p class="text-blue-800">
+                        将复杂的电路仿真实验分解为清晰的步骤，配合可视化进度指示，
+                        让学生始终了解当前位置和下一步操作。
+                    </p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-green-900 mb-3">📊 实时数据反馈</h3>
+                    <p class="text-green-800">
+                        实时真值表动态显示仿真结果，让学生立即看到操作效果，
+                        加深对半加器逻辑的理解。
+                    </p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-purple-50 to-violet-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-purple-900 mb-3">🤖 智能故障诊断</h3>
+                    <p class="text-purple-800">
+                        AI能够分析电路状态，识别常见错误，提供针对性的故障排查建议，
+                        提高学习效率。
+                    </p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-orange-50 to-amber-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-orange-900 mb-3">🎯 个性化学习体验</h3>
+                    <p class="text-orange-800">
+                        根据学生的学习进度和理解能力，动态调整指导策略，
+                        确保每个学生都能获得适合的学习体验。
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页面底部 -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">
+                AI Agent 半加器仿真实验平台 © 2025 - 为数字电路教育而设计
+            </p>
+        </div>
+    </footer>
+</body>
+</html> 
